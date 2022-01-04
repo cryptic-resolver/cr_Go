@@ -1,3 +1,15 @@
+//   ---------------------------------------------------
+//   File          : cr.go
+//   Authors       : ccmywish <ccmywish@qq.com>
+//   Created on    : <2021-12-29>
+//   Last modified : <2022-1-4>
+//
+//   This file is used to explain a CRyptic command
+//   or an acronym's real meaning in computer world or
+//   orther fileds.
+//
+//  ---------------------------------------------------
+
 package main
 
 import (
@@ -6,6 +18,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"strings"
 
 	"github.com/BurntSushi/toml"
 )
@@ -67,7 +80,6 @@ func add_default_sheet_if_none_exist() {
 }
 
 func update_sheets(sheet_repo string) {
-	// fmt.Println("TODO: update_sheets")
 
 	add_default_sheet_if_none_exist()
 
@@ -100,8 +112,13 @@ func update_sheets(sheet_repo string) {
 //     same    string
 // }
 
-// var words map[string]interface{}
-func load_dictionary(path string, file string, words interface{}) bool {
+//
+// path: sheet name, eg. cryptic_computer
+// file: dict(file) name, eg. a,b,c,d
+// dict: the concrete dict
+// 		 var dict map[string]interface{}
+//
+func load_dictionary(path string, file string, dict interface{}) bool {
 
 	toml_file := CRYPTIC_RESOLVER_HOME + fmt.Sprintf("/%s/%s.toml", path, file)
 
@@ -110,7 +127,7 @@ func load_dictionary(path string, file string, words interface{}) bool {
 		data, _ := ioutil.ReadFile(toml_file)
 		datastr := string(data)
 
-		if _, err := toml.Decode(datastr, &words); err != nil {
+		if _, err := toml.Decode(datastr, &dict); err != nil {
 			log.Fatal(err)
 		}
 		return true
@@ -119,6 +136,7 @@ func load_dictionary(path string, file string, words interface{}) bool {
 	}
 }
 
+// Pretty print the info of the given word
 func pp_info(info map[string]interface{}) {
 	// interface{} is just any-type
 
@@ -161,6 +179,64 @@ func pp_info(info map[string]interface{}) {
 // Print default cryptic_ sheets
 func pp_sheet(sheet string) {
 	fmt.Println(green("From: " + sheet))
+}
+
+//  Used for synonym jump
+//  Because we absolutely jump to a must-have word
+//  So we can directly lookup to it
+//
+//  Notice that, we must jump to a specific word definition
+//  So in the toml file, you must specify the precise word.
+//  If it has multiple meanings, for example
+//
+//    [blah]
+//    same = "XDG"  # this is wrong
+//
+//    [blah]
+//    same = "XDG.Download" # this is right
+func directly_lookup(sheet string, file string, word string) bool {
+
+	var dict map[string]interface{}
+
+	dict_status := load_dictionary(sheet, strings.ToLower(file), dict)
+
+	if dict_status == false {
+		fmt.Println("WARN: Synonym jumps to a wrong place") // TODO repair this
+		os.Exit(0)
+	}
+
+	words := strings.Split(word, ".") // [XDG Download]
+	dictword := words[0]              // XDG [Download]
+
+	var info map[string]interface{}
+
+	if len(words) == 1 { // [HEHE]
+		// info = dict[dictword]
+		// cannot use dict[dictword] (map index expression of type interface{}) as map[string]interface{} value in assignment
+
+		// so use this
+		info = dict[dictword].(map[string]interface{})
+
+	} else { //  [XDG Download]
+		explain := words[1]
+		indirect_info := dict[dictword].(map[string]interface{})
+		info = indirect_info[explain].(map[string]interface{})
+	}
+
+	// Warn user this is the toml maintainer's fault
+	// the info map is empty
+	if len(info) == 0 {
+		str := "WARN: Synonym jumps to a wrong place at `%s` \n" +
+			"Please consider fixing this in `%s.toml` of the sheet `%s`"
+
+		redstr := red(fmt.Sprintf(str, word, strings.ToLower(file), sheet))
+
+		fmt.Println(redstr)
+		os.Exit(0)
+	}
+
+	pp_info(info)
+	return true // always true
 }
 
 func solve_word(word string) {
