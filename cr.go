@@ -19,6 +19,7 @@ import (
 	"os"
 	"os/exec"
 	"strings"
+	"regexp"
 
 	"github.com/BurntSushi/toml"
 )
@@ -239,8 +240,73 @@ func directly_lookup(sheet string, file string, word string) bool {
 	return true // always true
 }
 
+//  The main logic of `cr`
+//    1. Search the default's first sheet first
+//    2. Search the rest sheets in the cryptic sheets default dir
+//
+//  The `search` procedure is done via the `lookup` function. It
+//  will print the info while finding. If `lookup` always return
+//  false then means lacking of this word in our sheets. So a wel-
+//  comed contribution is prinetd on the screen.
 func solve_word(word string) {
-	fmt.Println("TODO: solve_word")
+
+	add_default_sheet_if_none_exist()
+
+	word := strings.ToLower(word)
+	// The index is the toml file we'll look into
+	index := word[0:1]
+	
+	re := regexp.MustCompile(`\d`)
+	match := re.MatchString(index)
+
+	if match {
+		index = "0123456789"
+	}
+
+	// Default's first should be 1st to consider
+	first_sheet := "cryptic_" + CRYPTIC_DEFAULT_SHEETS["computer"]
+  
+	// cache lookup results
+	// bool slice
+	var results []bool
+	append(results, lookup(first_sheet,index,word))
+	// return if result == true # We should consider all sheets
+  
+	// Then else
+	rest := ioutil.ReadDir(CRYPTIC_RESOLVER_HOME)
+	for dir := range rest {
+		if dir != first_sheet {
+			append(results, lookup(sheet,index,word))
+			// continue if result == false # We should consider all sheets
+		}
+	}
+
+	var result_flag bool 
+	for res := range results {
+		if res == true {
+			result_flag = true
+		}
+	}
+
+	if result_flag != true {
+	  fmt.Println(`
+  cr: Not found anything.
+  
+  You may use ``cr -u`` to update the sheets.
+  Or you could contribute to our sheets: Thanks!
+
+`)
+	fmt.Printf("	1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"] )
+	fmt.Printf("	2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"] )
+	fmt.Printf("	3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"] )
+	fmt.Printf("	4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"] )
+	fmt.Printf("	5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"] )
+	fmt.Println()
+
+	} else {
+	  return
+	}
+
 }
 
 // notice the tab is 8 spaces by default
