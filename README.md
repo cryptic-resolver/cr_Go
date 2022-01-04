@@ -163,6 +163,8 @@ In one sheet, you should consider adding a subkey to differ each other like the 
 
 ## cr in Go development
 
+This is built in Go v1.17.5
+
 maybe you need `sudo` access
 
 - `go mod init github.com/Cryptic-Resolver/cr_Go` to add `go.mod`

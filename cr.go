@@ -14,12 +14,13 @@ package main
 
 import (
 	"fmt"
-	"io/ioutil"
 	"log"
 	"os"
-	"os/exec"
-	"strings"
 	"regexp"
+	"strings"
+
+	"io/ioutil"
+	"os/exec"
 
 	"github.com/BurntSushi/toml"
 )
@@ -240,6 +241,117 @@ func directly_lookup(sheet string, file string, word string) bool {
 	return true // always true
 }
 
+//  Lookup the given word in a dictionary (a toml file in a sheet) and also print.
+//  The core idea is that:
+//
+//  1. if the word is `same` with another synonym, it will directly jump to
+//    a word in this sheet, but maybe a different dictionary
+//
+//  2. load the toml file and check whether it has the only one meaning.
+//    2.1 If yes, then just print it using `pp_info`
+//    2.2 If not, then collect all the meanings of the word, and use `pp_info`
+//
+func lookup(sheet string, file string, word string) bool {
+	// Only one meaning
+
+	var dict map[string]interface{}
+
+	dict_status := load_dictionary(sheet, file, dict)
+
+	if dict_status == false {
+		return false
+	}
+
+	//  We firstly want keys in toml be case-insenstive, but later in 2021/10/26 I found it caused problems.
+	// So I decide to add a new must-have format member: `disp`
+	// This will display the word in its traditional form.
+	// Then, all the keywords can be downcase.
+
+	var info map[string]interface{}
+
+	info = dict[word].(map[string]interface{}) // Directly hash it
+	if len(info) == 0 {
+		return false
+	}
+
+	// TODO nil and len() == 0 is the same in Go, how to fix this???
+	// Warn user if the info is empty. For example:
+	//   emacs = { }
+	if len(info) == 0 {
+
+		str := fmt.Sprintf("WARN: Lack of everything of the given word \nPlease consider fixing this in the sheet `%s`", sheet)
+		fmt.Println(red(str))
+		os.Exit(0)
+	}
+
+	// Check whether it's a synonym for anther word
+	// If yes, we should lookup into this sheet again, but maybe with a different file
+	var same string
+
+	same = info["same"].(string)
+
+	// TODO need to debug here
+	if same != "" {
+		pp_sheet(sheet)
+		// point out to user, this is a jump
+		fmt.Println(blue(bold(word)) + " redirects to " + blue(bold(same)))
+
+		// no need to load dictionary again
+		if strings.ToLower(word)[0:1] == file {
+			// Explicitly convert it to downcase.
+			// In case the dictionary maintainer redirects to an uppercase word by mistake.
+			same = strings.ToLower(same)
+			same_info := dict[same].(map[string]interface{})
+			if len(same_info) == 0 {
+				str := "WARN: Synonym jumps to the wrong place " + same + "\n" +
+					"Please consider fixing this in " + strings.ToLower(file) +
+					".toml of the sheet `" + sheet + "`"
+
+				fmt.Println(red(str))
+				return false
+			} else {
+				pp_info(info)
+				return true
+			}
+		} else {
+			return directly_lookup(sheet, same[0:1], same)
+		}
+	}
+
+	// Check if it's only one meaning
+
+	if wordinfo, found := info["desc"]; found {
+		pp_sheet(sheet)
+		pp_info(wordinfo.(map[string]interface{}))
+		return true
+	}
+
+	// Multiple meanings in one sheet
+
+	var infos []string
+	for _, i := range info {
+		append(infos, i.(string))
+	}
+
+	if len(infos) != 0 {
+		pp_sheet(sheet)
+
+		for _, meaning := range infos {
+			multi_ref := dict[word].(map[string]interface{})
+			pp_info(multi_ref[meaning].(map[string]interface{}))
+			// last meaning doesn't show this separate line
+			if infos[len(infos)-1] != meaning {
+				fmt.Print(blue(bold("OR")), "\n")
+			}
+		}
+
+		return true
+
+	} else {
+		return false
+	}
+}
+
 //  The main logic of `cr`
 //    1. Search the default's first sheet first
 //    2. Search the rest sheets in the cryptic sheets default dir
@@ -248,14 +360,14 @@ func directly_lookup(sheet string, file string, word string) bool {
 //  will print the info while finding. If `lookup` always return
 //  false then means lacking of this word in our sheets. So a wel-
 //  comed contribution is prinetd on the screen.
-func solve_word(word string) {
+func solve_word(word_2_solve string) {
 
 	add_default_sheet_if_none_exist()
 
-	word := strings.ToLower(word)
+	word := strings.ToLower(word_2_solve)
 	// The index is the toml file we'll look into
 	index := word[0:1]
-	
+
 	re := regexp.MustCompile(`\d`)
 	match := re.MatchString(index)
 
@@ -265,46 +377,44 @@ func solve_word(word string) {
 
 	// Default's first should be 1st to consider
 	first_sheet := "cryptic_" + CRYPTIC_DEFAULT_SHEETS["computer"]
-  
+
 	// cache lookup results
 	// bool slice
 	var results []bool
-	append(results, lookup(first_sheet,index,word))
+	append(results, lookup(first_sheet, index, word))
 	// return if result == true # We should consider all sheets
-  
+
 	// Then else
-	rest := ioutil.ReadDir(CRYPTIC_RESOLVER_HOME)
-	for dir := range rest {
-		if dir != first_sheet {
-			append(results, lookup(sheet,index,word))
+	rest, _ := ioutil.ReadDir(CRYPTIC_RESOLVER_HOME)
+	for _, dir := range rest {
+		if dir.Name() != first_sheet {
+			append(results, lookup(sheet, index, word))
 			// continue if result == false # We should consider all sheets
 		}
 	}
 
-	var result_flag bool 
-	for res := range results {
+	var result_flag bool
+	for _, res := range results {
 		if res == true {
 			result_flag = true
 		}
 	}
 
 	if result_flag != true {
-	  fmt.Println(`
-  cr: Not found anything.
-  
-  You may use ``cr -u`` to update the sheets.
-  Or you could contribute to our sheets: Thanks!
+		fmt.Println("\n" +
+			"cr: Not found anything.\n\n" +
+			"You may use `cr -u` to update the sheets.\n" +
+			"Or you could contribute to our sheets: Thanks!\n\n")
 
-`)
-	fmt.Printf("	1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"] )
-	fmt.Printf("	2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"] )
-	fmt.Printf("	3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"] )
-	fmt.Printf("	4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"] )
-	fmt.Printf("	5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"] )
-	fmt.Println()
+		fmt.Printf("	1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"])
+		fmt.Printf("	2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"])
+		fmt.Printf("	3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"])
+		fmt.Printf("	4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"])
+		fmt.Printf("	5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"])
+		fmt.Println()
 
 	} else {
-	  return
+		return
 	}
 
 }
