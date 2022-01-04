@@ -2,8 +2,12 @@ package main
 
 import (
 	"fmt"
+	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
+
+	"github.com/BurntSushi/toml"
 )
 
 var homedir, err = os.UserHomeDir() // Outside can't use :=
@@ -86,6 +90,77 @@ func update_sheets(sheet_repo string) {
 		fmt.Println("cr: Add new sheet done")
 	}
 
+}
+
+// type CrypticWord struct {
+// 	disp    string
+// 	desc    string
+//     full    string
+//     see     []string
+//     same    string
+// }
+
+// var words map[string]interface{}
+func load_dictionary(path string, file string, words interface{}) bool {
+
+	toml_file := CRYPTIC_RESOLVER_HOME + fmt.Sprintf("/%s/%s.toml", path, file)
+
+	if _, err := os.Stat("file-exists.go"); err == nil {
+		// read file into data
+		data, _ := ioutil.ReadFile(toml_file)
+		datastr := string(data)
+
+		if _, err := toml.Decode(datastr, &words); err != nil {
+			log.Fatal(err)
+		}
+		return true
+	} else {
+		return false
+	}
+}
+
+func pp_info(info map[string]interface{}) {
+	// interface{} is just any-type
+
+	// We should convert disp, desc, full into string
+	// string((info["disp"]) is not working
+	disp := fmt.Sprint(info["disp"])
+	if disp == "" {
+		disp = red("No name!")
+	}
+
+	fmt.Printf("\n  %s: %s", disp, info["desc"])
+
+	if full := info["full"]; full != nil {
+		fmt.Println("\n  ", full)
+	}
+
+	// see is []string
+	// we should convert interface{} to it
+	if see := info["see"]; see != nil {
+		fmt.Printf("\n%s ", purple("SEE ALSO "))
+
+		// according to this
+		// https://stackoverflow.com/questions/42740437/casting-interface-to-string-array
+		// I need a type assertion
+
+		// cannot convert see (variable of type interface{}) to []string compilerInvalidConversion
+		// see_also := []string(see)
+		// instead, use this
+		see_also := see.([]string)
+
+		for _, val := range see_also {
+			fmt.Print(underline(val))
+		}
+
+		fmt.Println()
+	}
+	fmt.Println()
+}
+
+// Print default cryptic_ sheets
+func pp_sheet(sheet string) {
+	fmt.Println(green("From: " + sheet))
 }
 
 func solve_word(word string) {

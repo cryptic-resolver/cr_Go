@@ -165,11 +165,9 @@ In one sheet, you should consider adding a subkey to differ each other like the 
 
 maybe you need `sudo` access
 
-- `npm login`
-- `npm publish`
-- `npm install cryptic-resolcer -g`
-- `npm update cryptic-resolcer -g`
-- `npm uninstall cryptic-resolver -g`
+- `go mod init github.com/Cryptic-Resolver/cr_Go` to add `go.mod`
+- `go get -u github.com/BurntSushi/toml` to add dependency in `go.mod` and generates `go.sum`
+
 
 
 <br>
