@@ -25,7 +25,7 @@ import (
 	"github.com/BurntSushi/toml"
 )
 
-var homedir, err = os.UserHomeDir() // Outside can't use :=
+var homedir, _ = os.UserHomeDir() // Outside can't use :=
 
 var CRYPTIC_RESOLVER_HOME = homedir + "/.cryptic-resolver"
 
@@ -106,30 +106,22 @@ func update_sheets(sheet_repo string) {
 
 }
 
-// type CrypticWord struct {
-// 	disp    string
-// 	desc    string
-//     full    string
-//     see     []string
-//     same    string
-// }
-
 //
 // path: sheet name, eg. cryptic_computer
 // file: dict(file) name, eg. a,b,c,d
 // dict: the concrete dict
 // 		 var dict map[string]interface{}
 //
-func load_dictionary(path string, file string, dict interface{}) bool {
+func load_dictionary(path string, file string, dictptr *map[string]interface{}) bool {
 
 	toml_file := CRYPTIC_RESOLVER_HOME + fmt.Sprintf("/%s/%s.toml", path, file)
 
-	if _, err := os.Stat("file-exists.go"); err == nil {
+	if _, err := os.Stat(toml_file); err == nil {
 		// read file into data
 		data, _ := ioutil.ReadFile(toml_file)
 		datastr := string(data)
 
-		if _, err := toml.Decode(datastr, &dict); err != nil {
+		if _, err := toml.Decode(datastr, dictptr); err != nil {
 			log.Fatal(err)
 		}
 		return true
@@ -149,10 +141,10 @@ func pp_info(info map[string]interface{}) {
 		disp = red("No name!")
 	}
 
-	fmt.Printf("\n  %s: %s", disp, info["desc"])
+	fmt.Printf("\n  %s: %s\n", disp, info["desc"])
 
 	if full := info["full"]; full != nil {
-		fmt.Println("\n  ", full)
+		fmt.Printf("\n  %s\n", full)
 	}
 
 	// see is []string
@@ -167,10 +159,11 @@ func pp_info(info map[string]interface{}) {
 		// cannot convert see (variable of type interface{}) to []string compilerInvalidConversion
 		// see_also := []string(see)
 		// instead, use this
-		see_also := see.([]string)
+		// see_also := see.([]string)
+		see_also := see.([]interface{})
 
 		for _, val := range see_also {
-			fmt.Print(underline(val))
+			fmt.Print(underline(val.(string)))
 		}
 
 		fmt.Println()
@@ -200,7 +193,7 @@ func directly_lookup(sheet string, file string, word string) bool {
 
 	var dict map[string]interface{}
 
-	dict_status := load_dictionary(sheet, strings.ToLower(file), dict)
+	dict_status := load_dictionary(sheet, strings.ToLower(file), &dict)
 
 	if dict_status == false {
 		fmt.Println("WARN: Synonym jumps to a wrong place") // TODO repair this
@@ -256,7 +249,7 @@ func lookup(sheet string, file string, word string) bool {
 
 	var dict map[string]interface{}
 
-	dict_status := load_dictionary(sheet, file, dict)
+	dict_status := load_dictionary(sheet, file, &dict)
 
 	if dict_status == false {
 		return false
@@ -269,12 +262,11 @@ func lookup(sheet string, file string, word string) bool {
 
 	var info map[string]interface{}
 
-	info = dict[word].(map[string]interface{}) // Directly hash it
-	if len(info) == 0 {
+	info, found := dict[word].(map[string]interface{}) // Directly hash it
+	if !found {
 		return false
 	}
 
-	// TODO nil and len() == 0 is the same in Go, how to fix this???
 	// Warn user if the info is empty. For example:
 	//   emacs = { }
 	if len(info) == 0 {
@@ -288,10 +280,11 @@ func lookup(sheet string, file string, word string) bool {
 	// If yes, we should lookup into this sheet again, but maybe with a different file
 	var same string
 
-	same = info["same"].(string)
+	same, found = info["same"].(string)
 
 	// TODO need to debug here
-	if same != "" {
+	// same not exists
+	if found {
 		pp_sheet(sheet)
 		// point out to user, this is a jump
 		fmt.Println(blue(bold(word)) + " redirects to " + blue(bold(same)))
@@ -320,9 +313,9 @@ func lookup(sheet string, file string, word string) bool {
 
 	// Check if it's only one meaning
 
-	if wordinfo, found := info["desc"]; found {
+	if _, found := info["desc"]; found {
 		pp_sheet(sheet)
-		pp_info(wordinfo.(map[string]interface{}))
+		pp_info(info)
 		return true
 	}
 
@@ -330,7 +323,7 @@ func lookup(sheet string, file string, word string) bool {
 
 	var infos []string
 	for _, i := range info {
-		append(infos, i.(string))
+		infos = append(infos, i.(string))
 	}
 
 	if len(infos) != 0 {
@@ -376,19 +369,20 @@ func solve_word(word_2_solve string) {
 	}
 
 	// Default's first should be 1st to consider
-	first_sheet := "cryptic_" + CRYPTIC_DEFAULT_SHEETS["computer"]
+	first_sheet := "cryptic_computer"
 
 	// cache lookup results
 	// bool slice
 	var results []bool
-	append(results, lookup(first_sheet, index, word))
+	results = append(results, lookup(first_sheet, index, word))
 	// return if result == true # We should consider all sheets
 
 	// Then else
 	rest, _ := ioutil.ReadDir(CRYPTIC_RESOLVER_HOME)
 	for _, dir := range rest {
-		if dir.Name() != first_sheet {
-			append(results, lookup(sheet, index, word))
+		sheet := dir.Name()
+		if sheet != first_sheet {
+			results = append(results, lookup(sheet, index, word))
 			// continue if result == false # We should consider all sheets
 		}
 	}
@@ -401,16 +395,15 @@ func solve_word(word_2_solve string) {
 	}
 
 	if result_flag != true {
-		fmt.Println("\n" +
-			"cr: Not found anything.\n\n" +
+		fmt.Println("cr: Not found anything.\n\n" +
 			"You may use `cr -u` to update the sheets.\n" +
-			"Or you could contribute to our sheets: Thanks!\n\n")
+			"Or you could contribute to our sheets: Thanks!\n")
 
-		fmt.Printf("	1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"])
-		fmt.Printf("	2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"])
-		fmt.Printf("	3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"])
-		fmt.Printf("	4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"])
-		fmt.Printf("	5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"])
+		fmt.Printf("    1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"])
+		fmt.Printf("    2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"])
+		fmt.Printf("    3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"])
+		fmt.Printf("    4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"])
+		fmt.Printf("    5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"])
 		fmt.Println()
 
 	} else {
@@ -432,13 +425,7 @@ usage:
 	fmt.Println(help)
 }
 
-func test() {
-	fmt.Printf("dir is %t\n", is_there_any_sheet())
-}
-
 func main() {
-
-	test()
 
 	var arg string
 	var arg_num = len(os.Args)
