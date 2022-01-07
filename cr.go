@@ -320,19 +320,19 @@ func lookup(sheet string, file string, word string) bool {
 
 	// Multiple meanings in one sheet
 
-	var infos []string
-	for _, i := range info {
-		infos = append(infos, i.(string))
+	var info_names []string
+	for i, _ := range info {
+		info_names = append(info_names, i)
 	}
 
-	if len(infos) != 0 {
+	if len(info_names) != 0 {
 		pp_sheet(sheet)
 
-		for _, meaning := range infos {
+		for _, meaning := range info_names {
 			multi_ref := dict[word].(map[string]interface{})
 			pp_info(multi_ref[meaning].(map[string]interface{}))
 			// last meaning doesn't show this separate line
-			if infos[len(infos)-1] != meaning {
+			if info_names[len(info_names)-1] != meaning {
 				fmt.Print(blue(bold("OR")), "\n")
 			}
 		}
