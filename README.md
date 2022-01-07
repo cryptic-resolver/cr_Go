@@ -4,7 +4,7 @@
 
 
 [![word-count](https://img.shields.io/badge/Keywords%20Inlcuded-386-brightgreen)](#default-sheets)
-[![Npm Version](https://badge.fury.io/js/cryptic-resolver.svg)](https://npmjs.com/package/cryptic-resolver) 
+[![GitHub version](https://badge.fury.io/gh/cryptic-resolver%2Fcr_Go.svg)](https://badge.fury.io/gh/cryptic-resolver%2Fcr_Go)
 
 </div>
 
@@ -33,7 +33,7 @@ Not only can it be used in the computer filed, but also you can use this to mana
 ## Install
 
 ```bash
-npm install cryptic-resolver -g
+scoop install cryptic-resolver
 ```
 
 Tested well on `Ubuntu` and `Windows 11`.
@@ -171,6 +171,9 @@ maybe you need `sudo` access
 - `go get -u github.com/BurntSushi/toml` to add dependency in `go.mod` and generates `go.sum`
 - `go run ./cr.go`
 
+Test with `scoop` installation
+
+- `scoop install ./cryptic-resolver.json`
 
 
 
