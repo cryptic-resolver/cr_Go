@@ -282,8 +282,7 @@ func lookup(sheet string, file string, word string) bool {
 
 	same, found = info["same"].(string)
 
-	// TODO need to debug here
-	// same not exists
+	// the same exists
 	if found {
 		pp_sheet(sheet)
 		// point out to user, this is a jump
@@ -294,8 +293,8 @@ func lookup(sheet string, file string, word string) bool {
 			// Explicitly convert it to downcase.
 			// In case the dictionary maintainer redirects to an uppercase word by mistake.
 			same = strings.ToLower(same)
-			same_info := dict[same].(map[string]interface{})
-			if len(same_info) == 0 {
+			same_info, found := dict[same].(map[string]interface{})
+			if !found {
 				str := "WARN: Synonym jumps to the wrong place " + same + "\n" +
 					"Please consider fixing this in " + strings.ToLower(file) +
 					".toml of the sheet `" + sheet + "`"
@@ -303,7 +302,7 @@ func lookup(sheet string, file string, word string) bool {
 				fmt.Println(red(str))
 				return false
 			} else {
-				pp_info(info)
+				pp_info(same_info)
 				return true
 			}
 		} else {

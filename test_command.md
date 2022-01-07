@@ -11,7 +11,13 @@ cr -help
 # Not found anything
 
 cr emacs
-# find the basic word
+# test the basic word with see also
+
+cr jpg
+# test jump in same dict
+
+cr xdm
+# test or
 ```
 
 
