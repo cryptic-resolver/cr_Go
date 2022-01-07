@@ -116,8 +116,12 @@ func update_sheets(sheet_repo string) {
 
 		fmt.Println("cr: Update done")
 	} else {
-		cmd := fmt.Sprintf("git -C %s clone %s -q}", CRYPTIC_RESOLVER_HOME, sheet_repo)
-		exec.Command(cmd)
+		fmt.Println("cr: Adding new sheet...")
+		stdout_and_stderr, _ := exec.Command(
+			"git", "-C", CRYPTIC_RESOLVER_HOME, "clone", sheet_repo, "-q").CombinedOutput()
+		if str := string(stdout_and_stderr); str != "" {
+			fmt.Println(str)
+		}
 		fmt.Println("cr: Add new sheet done")
 	}
 
