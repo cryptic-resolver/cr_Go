@@ -20,6 +20,7 @@ import (
 	"strings"
 	"sync"
 
+	"io/fs"
 	"io/ioutil"
 	"os/exec"
 
@@ -37,7 +38,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.2.0"
+const CRYPTIC_VERSION = "1.3.0"
 
 //
 // helper: for color
@@ -105,15 +106,27 @@ func update_sheets(sheet_repo string) {
 	if sheet_repo == "" {
 		fmt.Println("cr: Updating all sheets...")
 
+		var wg sync.WaitGroup
+
 		dir, _ := os.Open(CRYPTIC_RESOLVER_HOME)
 		files, _ := dir.Readdir(0) // files fs.FileInfo
 		for _, file := range files {
-			sheet := file.Name()
-			fmt.Printf("cr: Wait to update %s...\n", sheet)
-			cmd := fmt.Sprintf("git -C ./%s pull -q", sheet)
-			exec.Command(cmd)
-		}
+			wg.Add(1)
 
+			go func(file fs.FileInfo) {
+				defer wg.Done()
+				sheet := file.Name()
+				fmt.Printf("cr: Wait to update %s...\n", sheet)
+				stdout_and_stderr, _ := exec.Command(
+					"git", "-C", CRYPTIC_RESOLVER_HOME+"/"+sheet, "pull", "-q").CombinedOutput()
+
+				if str := string(stdout_and_stderr); str != "" {
+					fmt.Println(str)
+				}
+
+			}(file)
+		}
+		wg.Wait()
 		fmt.Println("cr: Update done")
 	} else {
 		fmt.Println("cr: Adding new sheet...")

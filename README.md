@@ -173,6 +173,9 @@ maybe you need `sudo` access
 
 Test with `scoop` installation
 
+- `./build.ps1`
+- `get-filehash ./build/cr-x.x.x-amd64-pc-windows.exe`
+- update `cryptic-resolver.json` version, url, hash
 - `scoop install ./cryptic-resolver.json`
 
 
