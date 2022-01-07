@@ -38,7 +38,7 @@ On Windows
 scoop install cryptic-resolver
 ```
 
-Tested well on `Ubuntu` and `Windows 11`.
+Tested well on `Windows 11` and `Ubuntu`.
 
 <br>
 
