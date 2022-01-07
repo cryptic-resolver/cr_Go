@@ -21,6 +21,12 @@ cr xdm
 
 cr gdm
 # test no name from cryptic_test 
+
+cr -u https://github.com/cryptic-resolver/cryptic_test
+# add a new sheet
+
+cr -u 
+# update all sheets
 ```
 
 
