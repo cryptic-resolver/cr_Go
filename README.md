@@ -169,6 +169,8 @@ maybe you need `sudo` access
 
 - `go mod init github.com/Cryptic-Resolver/cr_Go` to add `go.mod`
 - `go get -u github.com/BurntSushi/toml` to add dependency in `go.mod` and generates `go.sum`
+- `go run ./cr.go`
+
 
 
 

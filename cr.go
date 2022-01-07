@@ -18,6 +18,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"sync"
 
 	"io/ioutil"
 	"os/exec"
@@ -36,7 +37,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.1.0"
+const CRYPTIC_VERSION = "1.2.0"
 
 //
 // helper: for color
@@ -73,10 +74,26 @@ func add_default_sheet_if_none_exist() {
 	if !is_there_any_sheet() {
 		fmt.Println("cr: Adding default sheets...")
 
-		for _, value := range CRYPTIC_DEFAULT_SHEETS {
-			cmd := fmt.Sprintf("git -C %s clone %s -q", CRYPTIC_RESOLVER_HOME, value)
-			exec.Command(cmd) // .Output()
+		var wg sync.WaitGroup
+
+		for key, value := range CRYPTIC_DEFAULT_SHEETS {
+			wg.Add(1)
+
+			go func(k string, v string) {
+
+				defer wg.Done()
+
+				fmt.Printf("cr: Pulling %s\n", "cryptic_"+k)
+				stdout_and_stderr, _ := exec.Command(
+					"git", "-C", CRYPTIC_RESOLVER_HOME, "clone", v, "-q").CombinedOutput() // instead of cmd.Output()
+
+				if str := string(stdout_and_stderr); str != "" {
+					fmt.Println(str)
+				}
+			}(key, value)
+
 		}
+		wg.Wait()
 		fmt.Println("cr: Add done")
 	}
 }
