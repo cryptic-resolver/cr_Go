@@ -2,7 +2,7 @@
 //   File          : cr.go
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-12-29>
-//   Last modified : <2022-1-4>
+//   Last modified : <2022-1-7>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
@@ -36,7 +36,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.0.0"
+const CRYPTIC_VERSION = "1.1.0"
 
 //
 // helper: for color
@@ -137,7 +137,8 @@ func pp_info(info map[string]interface{}) {
 	// We should convert disp, desc, full into string
 	// string((info["disp"]) is not working
 	disp := fmt.Sprint(info["disp"])
-	if disp == "" {
+	// fmt.Sprint will cause nil to the string below
+	if disp == "<nil>" {
 		disp = red("No name!")
 	}
 

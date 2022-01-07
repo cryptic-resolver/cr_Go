@@ -18,6 +18,9 @@ cr jpg
 
 cr xdm
 # test or
+
+cr gdm
+# test no name from cryptic_test 
 ```
 
 
