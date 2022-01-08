@@ -12,13 +12,13 @@
 echo "Downloading binary from github.com/cryptic-resolver/cr_Go"
 
 ostype=$(uname) 
-$cr_ver=1.3.1
+$cr_ver="1.3.1"
 
 dlprefix="https://github.com/cryptic-resolver/cr_Go/releases/download/v${dlprefix}${cr_ver}/cr-${cr_ver}-"
 
-if [[ $ostype == 'linux' ]]; then
+if [[ $ostype == 'linux' ]];then
    dl="${dlprefix}amd64-unknown-linux"
-else then
+else
    dl="${dlprefix}arm64-apple-darwin"
 fi
 
