@@ -16,15 +16,15 @@ cr_ver="1.3.1"
 
 dlprefix="https://github.com/cryptic-resolver/cr_Go/releases/download/v${dlprefix}${cr_ver}/cr-${cr_ver}-"
 
-if [[ $ostype == 'linux' ]];then
+if [[ $ostype == 'linux' ]] || [[ $ostype == 'Linux']] ;then
+   echo "Download Linux version"
    dl="${dlprefix}amd64-unknown-linux"
 else
+   echo "Download macOS version"
    dl="${dlprefix}arm64-apple-darwin"
 fi
 
-curl -fSL ${dl}
-
-mv ./cr-1.3.1-amd64-unknown-linux ./cr
+curl -fSL ${dl} -o cr
 
 chmod +x ./cr
 
