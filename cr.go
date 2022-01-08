@@ -2,7 +2,7 @@
 //   File          : cr.go
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-12-29>
-//   Last modified : <2022-1-7>
+//   Last modified : <2022-1-8>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
@@ -38,7 +38,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.3.0"
+const CRYPTIC_VERSION = "1.3.1"
 
 //
 // helper: for color
@@ -473,7 +473,7 @@ func main() {
 	switch arg {
 	case "":
 		help()
-		// add_default_sheet_if_none_exist()
+		add_default_sheet_if_none_exist()
 	case "-h":
 		help()
 	case "-u":
