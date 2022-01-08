@@ -32,8 +32,7 @@ $windows_bin_sha256 = (Get-FileHash "build/cr-${version}-amd64-pc-windows.exe").
 Write-Host "Windows bin SHA256: $windows_bin_sha256"
 
 
-$scoop_manifest = '
-{
+$scoop_manifest = '{
     "version": "' + "$version" + '",
     "description": "Cryptic-Resolver (cr) is a fast command line tool used to record and explain cryptic commands, acronyms and so forth in every field, including your own knowledge base.",
     "homepage": "https://github.com/cryptic-resolver/cr_Go",
@@ -57,6 +56,6 @@ $scoop_manifest = '
 
 '
 
-Set-Content -Path "build/cryptic-resolver.json" -Value $scoop_manifest
+Set-Content -Path "install/cryptic-resolver.json" -Value $scoop_manifest
 Write-Host "Generate cryptic-resolver.json in ./build/"
 

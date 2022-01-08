@@ -1,3 +1,3 @@
 scoop uninstall cryptic-resolver
 
-scoop install ./build/cryptic-resolver.json
+scoop install ./install/cryptic-resolver.json
