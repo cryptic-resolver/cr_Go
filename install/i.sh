@@ -16,7 +16,10 @@ cr_ver="1.3.1"
 
 dlprefix="https://github.com/cryptic-resolver/cr_Go/releases/download/v${dlprefix}${cr_ver}/cr-${cr_ver}-"
 
-if [[ $ostype == 'linux' ]] || [[ $ostype == 'Linux']] ;then
+# You must split the string and ']]' with a space
+# bash is really shit tool
+if [[ $ostype == 'linux' ]] || [[ $ostype == 'Linux' ]]
+then
    echo "Download Linux version"
    dl="${dlprefix}amd64-unknown-linux"
 else

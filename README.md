@@ -43,6 +43,8 @@ On Linux or macOS
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_Go/master/install/i.sh)"
 ```
 
+<br>
+
 Or just manually install from the [releases](https://github.com/cryptic-resolver/cr_Go/releases) page.
 
 Tested well on `Windows 11` and `Ubuntu`.
