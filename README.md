@@ -35,8 +35,15 @@ Not only can it be used in the computer filed, but also you can use this to mana
 On Windows
 
 ```bash
-scoop install cryptic-resolver
+scoop install "https://raw.githubusercontent.com/cryptic-resolver/cr_Go/master/install/cryptic-resolver.json"
 ```
+
+On Linux or macOS
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/cryptic-resolver/cr_Go/master/install/i.sh)"
+```
+
+Or just manually install from the [releases](https://github.com/cryptic-resolver/cr_Go/releases) page.
 
 Tested well on `Windows 11` and `Ubuntu`.
 
@@ -80,7 +87,7 @@ $ cr -h
 
 # Implementation
 
-`cr` is written in pure **Ruby**. You can implement this tool in any other language you like(name your projects as `cr_python` for example), just remember to reuse our [cryptic_computer] or other sheets which are the core parts anyone can contribute to.
+`cr` is written in pure **Go**. You can implement this tool in any other language you like(name your projects as `cr_Python` for example), just remember to reuse our [cryptic_computer] or other sheets which are the core parts anyone can contribute to.
 
 ## Sheet layout
 
