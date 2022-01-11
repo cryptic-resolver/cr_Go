@@ -22,6 +22,9 @@ cr loc
 cr xdm
 # test or
 
+cr mri
+# test cross sheet
+
 cr gdm
 # test no name from cryptic_test 
 
