@@ -25,11 +25,11 @@ cr xdm
 cr mri
 # test cross sheet
 
-cr gdm
-# test no name from cryptic_test 
-
 cr -u https://github.com/cryptic-resolver/cryptic_test
 # add a new sheet
+
+cr gdm
+# test no name from cryptic_test 
 
 cr -u 
 # update all sheets
