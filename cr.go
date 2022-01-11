@@ -323,15 +323,17 @@ func lookup(sheet string, file string, word string) bool {
 		// point out to user, this is a jump
 		fmt.Println(blue(bold(word)) + " redirects to " + blue(bold(same)))
 
+		// Explicitly convert it to downcase.
+		// In case the dictionary maintainer redirects to an uppercase word by mistake.
+		same = strings.ToLower(same)
+
 		// no need to load dictionary again
-		if strings.ToLower(word)[0:1] == file {
-			// Explicitly convert it to downcase.
-			// In case the dictionary maintainer redirects to an uppercase word by mistake.
-			same = strings.ToLower(same)
+		if strings.ToLower(word)[0:1] == same {
+
 			same_info, found := dict[same].(map[string]interface{})
 			if !found {
-				str := "WARN: Synonym jumps to the wrong place " + same + "\n" +
-					"Please consider fixing this in " + strings.ToLower(file) +
+				str := "WARN: Synonym jumps to the wrong place at `" + same + "`\n" +
+					"	Please consider fixing this in " + strings.ToLower(same[0:1]) +
 					".toml of the sheet `" + sheet + "`"
 
 				fmt.Println(red(str))

@@ -16,6 +16,9 @@ cr emacs
 cr jpg
 # test jump in same dict
 
+cr loc
+# test jump to another dict
+
 cr xdm
 # test or
 
