@@ -2,7 +2,7 @@
 #   File          : build.ps1
 #   Authors       : ccmywish <ccmywish@qq.com>
 #   Created on    : <2022-1-7>
-#   Last modified : <2022-1-8>
+#   Last modified : <2022-1-11>
 #
 #   Build cr on multi-platform via PowerShell
 #   ---------------------------------------------------
@@ -59,3 +59,7 @@ $scoop_manifest = '{
 Set-Content -Path "install/cryptic-resolver.json" -Value $scoop_manifest
 Write-Host "Generate cryptic-resolver.json in ./build/"
 
+
+$nix_install =  (Get-Content -Path "install/i-template.sh").Replace("cr_ver=`"1.3.1`"","cr_ver=`"${version}`"")
+Set-Content -Path "install/i.sh" -Value $nix_install
+Write-Host "Generate i.sh in ./build/"
