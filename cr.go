@@ -2,7 +2,7 @@
 //   File          : cr.go
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-12-29>
-//   Last modified : <2022-1-11>
+//   Last modified : <2022-2-7>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
