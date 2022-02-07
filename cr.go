@@ -38,7 +38,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.4.0"
+const CRYPTIC_VERSION = "1.5.0"
 
 //
 // helper: for color
@@ -185,7 +185,7 @@ func pp_info(info map[string]interface{}) {
 	// see is []string
 	// we should convert interface{} to it
 	if see := info["see"]; see != nil {
-		fmt.Printf("\n%s ", purple("SEE ALSO "))
+		fmt.Printf("\n%s ", purple("SEE ALSO"))
 
 		// according to this
 		// https://stackoverflow.com/questions/42740437/casting-interface-to-string-array
@@ -198,7 +198,7 @@ func pp_info(info map[string]interface{}) {
 		see_also := see.([]interface{})
 
 		for _, val := range see_also {
-			fmt.Print(underline(val.(string)))
+			fmt.Print(underline(val.(string)), " ")
 		}
 
 		fmt.Println()
@@ -454,9 +454,16 @@ func help() {
 	help := fmt.Sprintf(`cr: Cryptic Resolver version %v in Go
 
 usage:
+    cr -v                     => print version
     cr -h                     => print this help
     cr -u (xx.com//repo.git)  => update default sheet or add sheet from a git repo
     cr emacs                  => Edit macros: a feature-rich editor`, CRYPTIC_VERSION)
+
+	fmt.Println(help)
+}
+
+func print_version() {
+	help := fmt.Sprintf(`cr: Cryptic Resolver version %v in Go`, CRYPTIC_VERSION)
 
 	fmt.Println(help)
 }
@@ -478,6 +485,8 @@ func main() {
 		add_default_sheet_if_none_exist()
 	case "-h":
 		help()
+	case "-v":
+		print_version()
 	case "-u":
 		if len(os.Args) > 2 {
 			update_sheets(os.Args[2])
