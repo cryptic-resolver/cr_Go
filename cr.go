@@ -220,8 +220,8 @@ func pp_info(info map[string]interface{}) {
 }
 
 // Print default cryptic_ sheets
-func pp_sheet(sheet string) {
-	fmt.Println(green("From: " + sheet))
+func pp_dict(dict string) {
+	fmt.Println(green("From: " + dict))
 }
 
 //  Used for synonym jump
@@ -293,7 +293,6 @@ func directly_lookup(sheet string, file string, word string) bool {
 //    2.2 If not, then collect all the meanings of the word, and use `pp_info`
 //
 func lookup(sheet string, file string, word string) bool {
-	// Only one meaning
 
 	var dict map[string]interface{}
 
@@ -332,7 +331,7 @@ func lookup(sheet string, file string, word string) bool {
 
 	// the same exists
 	if found {
-		pp_sheet(sheet)
+		pp_dict(sheet)
 		// point out to user, this is a jump
 		fmt.Println(blue(bold(word)) + " redirects to " + blue(bold(same)))
 
@@ -360,35 +359,59 @@ func lookup(sheet string, file string, word string) bool {
 		}
 	}
 
-	// Check if it's only one meaning
-
+	// Single meaning with no category specifier
+	// We call this meaning as type 1
+	var type_1_exist_flag = false
 	if _, found := info["desc"]; found {
-		pp_sheet(sheet)
+		pp_dict(sheet)
 		pp_info(info)
-		return true
+		type_1_exist_flag = true
 	}
 
-	// Multiple meanings in one sheet
-
-	var info_names []string
+	// Meanings with category specifier
+	// We call this meaning as type 2
+	var categories_raw []string
 	for i, _ := range info {
-		info_names = append(info_names, i)
+		categories_raw = append(categories_raw, i)
 	}
 
-	if len(info_names) != 0 {
-		pp_sheet(sheet)
+	var cryptic_keywords = []string{"disp", "desc", "full", "same", "see"}
+	var categories []string
 
-		for _, meaning := range info_names {
+	is_keyword := false
+	for _, v := range categories_raw {
+		for _, key := range cryptic_keywords {
+			if v == key {
+				is_keyword = true
+				break
+			}
+		}
+		if is_keyword {
+			continue
+		} else {
+			categories = append(categories, v)
+		}
+	}
+
+	if len(categories) != 0 {
+		if type_1_exist_flag {
+			fmt.Print(blue(bold("OR")), "\n")
+		} else {
+			pp_dict(sheet)
+		}
+
+		for _, meaning := range categories {
 			multi_ref := dict[word].(map[string]interface{})
 			pp_info(multi_ref[meaning].(map[string]interface{}))
 			// last meaning doesn't show this separate line
-			if info_names[len(info_names)-1] != meaning {
+			if categories[len(categories)-1] != meaning {
 				fmt.Print(blue(bold("OR")), "\n")
 			}
 		}
 
 		return true
-
+	} else if type_1_exist_flag {
+		return true
 	} else {
 		return false
 	}
@@ -467,12 +490,12 @@ func help() {
 	help := fmt.Sprintf(`cr: Cryptic Resolver version %v in Go
 
 usage:
-    cr -v                   => print version
-    cr -h                   => print this help
-		cr -l									  => List local dictionaries
+    cr -v                   => Print version
+    cr -h                   => Print this help
+    cr -l                   => List local dictionaries
     cr -u                   => Update all dictionaries
-		cr -a xx.com//repo.git  => Add a new dictionary
-		cr -d cryptic_xx        => Delete a dictionary
+    cr -a xx.com//repo.git  => Add a new dictionary
+    cr -d cryptic_xx        => Delete a dictionary
     cr emacs                => Edit macros: a feature-rich editor`, CRYPTIC_VERSION)
 
 	fmt.Println(help)
@@ -491,7 +514,7 @@ func list_directories() {
 	for i, value := range files {
 		index := bold(blue(strconv.FormatInt(int64(i+1), 10)))
 		str := fmt.Sprintf("%s. %s\n", index, bold(green(value.Name())))
-		fmt.Printf(str)
+		fmt.Print(str)
 	}
 
 }
