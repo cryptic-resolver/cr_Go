@@ -141,6 +141,18 @@ func add_dict(dict string) {
 	fmt.Println("cr: Add new dictionary done")
 }
 
+func del_dict(dict string) {
+	dir := CRYPTIC_RESOLVER_HOME + "/" + dict
+	ret := os.RemoveAll(dir)
+	if ret == nil {
+		err := fmt.Sprintf("cr: %s: File does not exist \n", dir)
+		fmt.Print(bold(red(err)))
+		list_directories()
+		return
+	}
+	fmt.Printf("cr: Delete dictionary %s done\n", bold(green(dict)))
+}
+
 //
 // path: sheet name, eg. cryptic_computer
 // file: dict(file) name, eg. a,b,c,d
@@ -426,15 +438,15 @@ func solve_word(word_2_solve string) {
 
 	var result_flag bool
 	for _, res := range results {
-		if res == true {
+		if res {
 			result_flag = true
 		}
 	}
 
-	if result_flag != true {
+	if !result_flag {
 		fmt.Println("cr: Not found anything.\n\n" +
 			"You may use `cr -u` to update the sheets.\n" +
-			"Or you could contribute to our sheets: Thanks!\n")
+			"Or you could contribute to: \n")
 
 		fmt.Printf("    1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"])
 		fmt.Printf("    2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"])
@@ -510,6 +522,10 @@ func main() {
 	case "-a":
 		if len(os.Args) > 2 {
 			add_dict(os.Args[2])
+		}
+	case "-d":
+		if len(os.Args) > 2 {
+			del_dict(os.Args[2])
 		}
 	default:
 		solve_word(arg)
