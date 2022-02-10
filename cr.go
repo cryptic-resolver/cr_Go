@@ -32,7 +32,7 @@ var homedir, _ = os.UserHomeDir() // Outside can't use :=
 
 var CRYPTIC_RESOLVER_HOME = homedir + "/.cryptic-resolver"
 
-var CRYPTIC_DEFAULT_SHEETS = map[string]string{
+var CRYPTIC_DEFAULT_DICTS = map[string]string{
 	"computer": "https://github.com/cryptic-resolver/cryptic_computer.git",
 	"common":   "https://github.com/cryptic-resolver/cryptic_common.git",
 	"science":  "https://github.com/cryptic-resolver/cryptic_science.git",
@@ -78,7 +78,7 @@ func add_default_dicts_if_none_exists() {
 
 		var wg sync.WaitGroup
 
-		for key, value := range CRYPTIC_DEFAULT_SHEETS {
+		for key, value := range CRYPTIC_DEFAULT_DICTS {
 			wg.Add(1)
 
 			go func(k string, v string) {
@@ -224,6 +224,7 @@ func pp_dict(dict string) {
 	fmt.Println(green("From: " + dict))
 }
 
+//
 //  Used for synonym jump
 //  Because we absolutely jump to a must-have word
 //  So we can directly lookup to it
@@ -237,11 +238,12 @@ func pp_dict(dict string) {
 //
 //    [blah]
 //    same = "XDG.Download" # this is right
-func directly_lookup(sheet string, file string, word string) bool {
+//
+func directly_lookup(dict string, file string, word string) bool {
 
-	var dict map[string]interface{}
+	var piece map[string]interface{}
 
-	dict_status := load_dictionary(sheet, strings.ToLower(file), &dict)
+	dict_status := load_dictionary(dict, strings.ToLower(file), &piece)
 
 	if dict_status == false {
 		fmt.Println("WARN: Synonym jumps to a wrong place") // TODO repair this
@@ -254,15 +256,15 @@ func directly_lookup(sheet string, file string, word string) bool {
 	var info map[string]interface{}
 
 	if len(words) == 1 { // [HEHE]
-		// info = dict[dictword]
-		// cannot use dict[dictword] (map index expression of type interface{}) as map[string]interface{} value in assignment
+		// info = piece[dictword]
+		// cannot use piece[dictword] (map index expression of type interface{}) as map[string]interface{} value in assignment
 
 		// so use this
-		info = dict[dictword].(map[string]interface{})
+		info = piece[dictword].(map[string]interface{})
 
 	} else { //  [XDG Download]
 		explain := words[1]
-		indirect_info := dict[dictword].(map[string]interface{})
+		indirect_info := piece[dictword].(map[string]interface{})
 		info = indirect_info[explain].(map[string]interface{})
 	}
 
@@ -270,9 +272,9 @@ func directly_lookup(sheet string, file string, word string) bool {
 	// the info map is empty
 	if len(info) == 0 {
 		str := "WARN: Synonym jumps to a wrong place at `%s` \n" +
-			"Please consider fixing this in `%s.toml` of the sheet `%s`"
+			"Please consider fixing this in `%s.toml` of the dictionary `%s`"
 
-		redstr := red(fmt.Sprintf(str, word, strings.ToLower(file), sheet))
+		redstr := red(fmt.Sprintf(str, word, strings.ToLower(file), dict))
 
 		fmt.Println(redstr)
 		os.Exit(0)
@@ -282,7 +284,7 @@ func directly_lookup(sheet string, file string, word string) bool {
 	return true // always true
 }
 
-//  Lookup the given word in a dictionary (a toml file in a sheet) and also print.
+//  Lookup the given word in a sheet (a toml file) and also print.
 //  The core idea is that:
 //
 //  1. if the word is `same` with another synonym, it will directly jump to
@@ -292,11 +294,11 @@ func directly_lookup(sheet string, file string, word string) bool {
 //    2.1 If yes, then just print it using `pp_info`
 //    2.2 If not, then collect all the meanings of the word, and use `pp_info`
 //
-func lookup(sheet string, file string, word string) bool {
+func lookup(dict string, file string, word string) bool {
 
-	var dict map[string]interface{}
+	var piece map[string]interface{}
 
-	dict_status := load_dictionary(sheet, file, &dict)
+	dict_status := load_dictionary(dict, file, &piece)
 
 	if dict_status == false {
 		return false
@@ -309,7 +311,7 @@ func lookup(sheet string, file string, word string) bool {
 
 	var info map[string]interface{}
 
-	info, found := dict[word].(map[string]interface{}) // Directly hash it
+	info, found := piece[word].(map[string]interface{}) // Directly hash it
 	if !found {
 		return false
 	}
@@ -318,20 +320,20 @@ func lookup(sheet string, file string, word string) bool {
 	//   emacs = { }
 	if len(info) == 0 {
 
-		str := fmt.Sprintf("WARN: Lack of everything of the given word \nPlease consider fixing this in the sheet `%s`", sheet)
+		str := fmt.Sprintf("WARN: Lack of everything of the given word \nPlease consider fixing this in the dictionary `%s`", dict)
 		fmt.Println(red(str))
 		os.Exit(0)
 	}
 
 	// Check whether it's a synonym for anther word
-	// If yes, we should lookup into this sheet again, but maybe with a different file
+	// If yes, we should lookup into this dict again, but maybe with a different file
 	var same string
 
 	same, found = info["same"].(string)
 
 	// the same exists
 	if found {
-		pp_dict(sheet)
+		pp_dict(dict)
 		// point out to user, this is a jump
 		fmt.Println(blue(bold(word)) + " redirects to " + blue(bold(same)))
 
@@ -342,11 +344,11 @@ func lookup(sheet string, file string, word string) bool {
 		// no need to load dictionary again
 		if strings.ToLower(word)[0:1] == same {
 
-			same_info, found := dict[same].(map[string]interface{})
+			same_info, found := piece[same].(map[string]interface{})
 			if !found {
 				str := "WARN: Synonym jumps to the wrong place at `" + same + "`\n" +
 					"	Please consider fixing this in " + strings.ToLower(same[0:1]) +
-					".toml of the sheet `" + sheet + "`"
+					".toml of the dictionary `" + dict + "`"
 
 				fmt.Println(red(str))
 				return false
@@ -355,7 +357,7 @@ func lookup(sheet string, file string, word string) bool {
 				return true
 			}
 		} else {
-			return directly_lookup(sheet, same[0:1], same)
+			return directly_lookup(dict, same[0:1], same)
 		}
 	}
 
@@ -363,7 +365,7 @@ func lookup(sheet string, file string, word string) bool {
 	// We call this meaning as type 1
 	var type_1_exist_flag = false
 	if _, found := info["desc"]; found {
-		pp_dict(sheet)
+		pp_dict(dict)
 		pp_info(info)
 		type_1_exist_flag = true
 	}
@@ -398,11 +400,11 @@ func lookup(sheet string, file string, word string) bool {
 		if type_1_exist_flag {
 			fmt.Print(blue(bold("OR")), "\n")
 		} else {
-			pp_dict(sheet)
+			pp_dict(dict)
 		}
 
 		for _, meaning := range categories {
-			multi_ref := dict[word].(map[string]interface{})
+			multi_ref := piece[word].(map[string]interface{})
 			pp_info(multi_ref[meaning].(map[string]interface{}))
 			// last meaning doesn't show this separate line
 			if categories[len(categories)-1] != meaning {
@@ -419,12 +421,12 @@ func lookup(sheet string, file string, word string) bool {
 }
 
 //  The main logic of `cr`
-//    1. Search the default's first sheet first
-//    2. Search the rest sheets in the cryptic sheets default dir
+//    1. Search the default's first dictionary first
+//    2. Search the rest dictionaries in the cryptic dicts default dir
 //
 //  The `search` procedure is done via the `lookup` function. It
 //  will print the info while finding. If `lookup` always return
-//  false then means lacking of this word in our sheets. So a wel-
+//  false then means lacking of this word in our dictionaries. So a wel-
 //  comed contribution is prinetd on the screen.
 func solve_word(word_2_solve string) {
 
@@ -442,21 +444,21 @@ func solve_word(word_2_solve string) {
 	}
 
 	// Default's first should be 1st to consider
-	first_sheet := "cryptic_computer"
+	first_dict := "cryptic_computer"
 
 	// cache lookup results
 	// bool slice
 	var results []bool
-	results = append(results, lookup(first_sheet, index, word))
-	// return if result == true # We should consider all sheets
+	results = append(results, lookup(first_dict, index, word))
+	// return if result == true # We should consider all dicts
 
 	// Then else
 	rest, _ := ioutil.ReadDir(CRYPTIC_RESOLVER_HOME)
 	for _, dir := range rest {
-		sheet := dir.Name()
-		if sheet != first_sheet {
-			results = append(results, lookup(sheet, index, word))
-			// continue if result == false # We should consider all sheets
+		dict := dir.Name()
+		if dict != first_dict {
+			results = append(results, lookup(dict, index, word))
+			// continue if result == false # We should consider all dicts
 		}
 	}
 
@@ -469,14 +471,14 @@ func solve_word(word_2_solve string) {
 
 	if !result_flag {
 		fmt.Println("cr: Not found anything.\n\n" +
-			"You may use `cr -u` to update the sheets.\n" +
+			"You may use `cr -u` to update the dictionaries.\n" +
 			"Or you could contribute to: \n")
 
-		fmt.Printf("    1. computer:  %s\n", CRYPTIC_DEFAULT_SHEETS["computer"])
-		fmt.Printf("    2. common:    %s\n", CRYPTIC_DEFAULT_SHEETS["common"])
-		fmt.Printf("    3. science:	  %s\n", CRYPTIC_DEFAULT_SHEETS["science"])
-		fmt.Printf("    4. economy:   %s\n", CRYPTIC_DEFAULT_SHEETS["economy"])
-		fmt.Printf("    5. medicine:  %s\n", CRYPTIC_DEFAULT_SHEETS["medicine"])
+		fmt.Printf("    1. computer:  %s\n", CRYPTIC_DEFAULT_DICTS["computer"])
+		fmt.Printf("    2. common:    %s\n", CRYPTIC_DEFAULT_DICTS["common"])
+		fmt.Printf("    3. science:	  %s\n", CRYPTIC_DEFAULT_DICTS["science"])
+		fmt.Printf("    4. economy:   %s\n", CRYPTIC_DEFAULT_DICTS["economy"])
+		fmt.Printf("    5. medicine:  %s\n", CRYPTIC_DEFAULT_DICTS["medicine"])
 		fmt.Println()
 
 	} else {
