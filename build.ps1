@@ -17,14 +17,16 @@ $version =
 
 Write-Host "cr version: $version"
 
+# https://pkg.go.dev/cmd/link
+# use -s -w to remove debug info
 Write-Host "Building for Windows x64"
-$env:GOOS="windows"; $env:GOARCH="amd64" ; go build -o "build/cr-${version}-amd64-pc-windows.exe"
+$env:GOOS="windows"; $env:GOARCH="amd64" ; go build -o "build/cr-${version}-amd64-pc-windows.exe" -ldflags "-s -w"
 
 Write-Host "Building for Linux x64"
-$env:GOOS="linux"; $env:GOARCH="amd64" ; go build -o "build/cr-${version}-amd64-unknown-linux"
+$env:GOOS="linux"; $env:GOARCH="amd64" ; go build -o "build/cr-${version}-amd64-unknown-linux" -ldflags "-s -w"
 
 Write-Host "Building for macOS x64"
-$env:GOOS="darwin"; $env:GOARCH="arm64" ; go build -o "build/cr-${version}-arm64-apple-darwin"
+$env:GOOS="darwin"; $env:GOARCH="arm64" ; go build -o "build/cr-${version}-arm64-apple-darwin" -ldflags "-s -w"
 
 # Auto generate scoop manifest
 $windows_bin_sha256 = (Get-FileHash "build/cr-${version}-amd64-pc-windows.exe").hash

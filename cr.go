@@ -39,7 +39,7 @@ var CRYPTIC_DEFAULT_DICTS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "2.0"
+const CRYPTIC_VERSION = "2.1"
 
 //
 // helper: for color
