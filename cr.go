@@ -2,7 +2,7 @@
 //   File          : cr.go
 //   Authors       : ccmywish <ccmywish@qq.com>
 //   Created on    : <2021-12-29>
-//   Last modified : <2022-2-7>
+//   Last modified : <2022-2-10>
 //
 //   This file is used to explain a CRyptic command
 //   or an acronym's real meaning in computer world or
@@ -38,7 +38,7 @@ var CRYPTIC_DEFAULT_SHEETS = map[string]string{
 	"economy":  "https://github.com/cryptic-resolver/cryptic_economy.git",
 	"medicine": "https://github.com/cryptic-resolver/cryptic_medicine.git"}
 
-const CRYPTIC_VERSION = "1.5.0"
+const CRYPTIC_VERSION = "2.0"
 
 //
 // helper: for color
@@ -57,7 +57,7 @@ func cyan(str string) string      { return fmt.Sprintf("\033[36m%s\033[0m", str)
 // core: logic
 //
 
-func is_there_any_sheet() bool {
+func is_there_any_dict() bool {
 	path := CRYPTIC_RESOLVER_HOME
 	if _, err := os.Stat(path); os.IsNotExist(err) {
 		os.Mkdir(path, 0755)
@@ -71,8 +71,8 @@ func is_there_any_sheet() bool {
 	}
 }
 
-func add_default_sheet_if_none_exist() {
-	if !is_there_any_sheet() {
+func add_default_dicts_if_none_exists() {
+	if !is_there_any_dict() {
 		fmt.Println("cr: Adding default sheets...")
 
 		var wg sync.WaitGroup
@@ -99,45 +99,45 @@ func add_default_sheet_if_none_exist() {
 	}
 }
 
-func update_sheets(sheet_repo string) {
+func update_dicts() {
 
-	add_default_sheet_if_none_exist()
+	add_default_dicts_if_none_exists()
 
-	if sheet_repo == "" {
-		fmt.Println("cr: Updating all sheets...")
+	fmt.Println("cr: Updating all dictionaries...")
 
-		var wg sync.WaitGroup
+	var wg sync.WaitGroup
 
-		dir, _ := os.Open(CRYPTIC_RESOLVER_HOME)
-		files, _ := dir.Readdir(0) // files fs.FileInfo
-		for _, file := range files {
-			wg.Add(1)
+	dir, _ := os.Open(CRYPTIC_RESOLVER_HOME)
+	files, _ := dir.Readdir(0) // files fs.FileInfo
+	for _, file := range files {
+		wg.Add(1)
 
-			go func(file fs.FileInfo) {
-				defer wg.Done()
-				sheet := file.Name()
-				fmt.Printf("cr: Wait to update %s...\n", sheet)
-				stdout_and_stderr, _ := exec.Command(
-					"git", "-C", CRYPTIC_RESOLVER_HOME+"/"+sheet, "pull", "-q").CombinedOutput()
+		go func(file fs.FileInfo) {
+			defer wg.Done()
+			sheet := file.Name()
+			fmt.Printf("cr: Wait to update %s...\n", sheet)
+			stdout_and_stderr, _ := exec.Command(
+				"git", "-C", CRYPTIC_RESOLVER_HOME+"/"+sheet, "pull", "-q").CombinedOutput()
 
-				if str := string(stdout_and_stderr); str != "" {
-					fmt.Println(str)
-				}
+			if str := string(stdout_and_stderr); str != "" {
+				fmt.Println(str)
+			}
 
-			}(file)
-		}
-		wg.Wait()
-		fmt.Println("cr: Update done")
-	} else {
-		fmt.Println("cr: Adding new sheet...")
-		stdout_and_stderr, _ := exec.Command(
-			"git", "-C", CRYPTIC_RESOLVER_HOME, "clone", sheet_repo, "-q").CombinedOutput()
-		if str := string(stdout_and_stderr); str != "" {
-			fmt.Println(str)
-		}
-		fmt.Println("cr: Add new sheet done")
+		}(file)
 	}
+	wg.Wait()
+	fmt.Println("cr: Update done")
 
+}
+
+func add_dict(dict string) {
+	fmt.Println("cr: Adding new dictionary...")
+	stdout_and_stderr, _ := exec.Command(
+		"git", "-C", CRYPTIC_RESOLVER_HOME, "clone", dict, "-q").CombinedOutput()
+	if str := string(stdout_and_stderr); str != "" {
+		fmt.Println(str)
+	}
+	fmt.Println("cr: Add new dictionary done")
 }
 
 //
@@ -391,7 +391,7 @@ func lookup(sheet string, file string, word string) bool {
 //  comed contribution is prinetd on the screen.
 func solve_word(word_2_solve string) {
 
-	add_default_sheet_if_none_exist()
+	add_default_dicts_if_none_exists()
 
 	word := strings.ToLower(word_2_solve)
 	// The index is the toml file we'll look into
@@ -482,18 +482,17 @@ func main() {
 	switch arg {
 	case "":
 		help()
-		add_default_sheet_if_none_exist()
+		add_default_dicts_if_none_exists()
 	case "-h":
 		help()
 	case "-v":
 		print_version()
 	case "-u":
+		update_dicts()
+	case "-a":
 		if len(os.Args) > 2 {
-			update_sheets(os.Args[2])
-		} else {
-			update_sheets("")
+			add_dict(os.Args[2])
 		}
-
 	default:
 		solve_word(arg)
 	}
