@@ -61,7 +61,7 @@ rather than
 
 <br>
 
-# Usage
+## Usage
 
 ```bash
 $ cr emacs
@@ -84,23 +84,29 @@ $ cr -h
 
 <br>
 
-# Implementation
+## Implementation
 
 `cr` is written in pure **Go**. You can implement this tool in any other language you like(name your projects as `cr_Python` for example), just remember to reuse our [cryptic_computer] or other sheets which are the core parts anyone can contribute to.
 
-## Sheet layout
+## Dictionary layout
 
-Sheet is the knowledgebase. Every sheet should be a git repository. And each should contain these files(we call these dictionarys):
+`Dictionary` is a knowledgebase. Every dictionary should be a `git` repository, and each consists of many files(we call these `sheets`):
+```
+Dictionary
+.
+├── 0123456789.toml
+├── a.toml
+├── b.toml
+├── c.toml
+├── ...
+├── y.toml
+└── z.toml
 
-1. 0123456789.toml
-2. a.toml
-3. b.toml
-3. ...
-4. z.toml
+```
 
-## Dictionary format(File format)
+## Sheet format(File format)
 
-In every file(or dictionary), your definition format looks like this in pure **toml**:
+In every file(or sheet), your definition format looks like this in pure **toml**:
 ```toml
 # A normal definition
 #
@@ -122,7 +128,7 @@ disp = "xxd"
 desc = "hex file dump"
 full = "Why call this 'xxd' rather than 'xd'?? Maybe a historical reason"
 
-# If there are multiple meanings, you should add a subkey to differ
+# You can add a subkey as a category specifier to differ
 [xdm.Download]
 disp = "XDM"
 desc = "eXtreme Download Manager"
@@ -132,7 +138,7 @@ disp = "XDM"
 desc = "X Display Manager"
 ```
 
-We have more features than above
+More features:
 ```toml
 [jpeg]
 disp = "JPEG"
@@ -156,9 +162,9 @@ desc = "A video compression standard" # The 'dot' keyword supported using quoted
 
 In one sheet, you should consider adding a subkey to differ each other like the example above.
 
-*But what if a sheet has 'gdm' while another also has a 'GDM'?*
+*But what if a dictionary has 'gdm' while another also has a 'GDM'?*
 
-> That's nothing, because cr knows this.
+> cr can handle this.
 
 *But what if a sheet has two 'gdm'?* 
 
@@ -168,6 +174,7 @@ In one sheet, you should consider adding a subkey to differ each other like the 
 
 
 <br>
+
 
 ## cr in Go development
 
