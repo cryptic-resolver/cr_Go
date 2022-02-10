@@ -378,8 +378,9 @@ func lookup(sheet string, file string, word string) bool {
 	var cryptic_keywords = []string{"disp", "desc", "full", "same", "see"}
 	var categories []string
 
-	is_keyword := false
+	var is_keyword bool
 	for _, v := range categories_raw {
+		is_keyword = false
 		for _, key := range cryptic_keywords {
 			if v == key {
 				is_keyword = true
