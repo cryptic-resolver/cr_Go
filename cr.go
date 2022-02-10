@@ -17,6 +17,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"strconv"
 	"strings"
 	"sync"
 
@@ -454,10 +455,13 @@ func help() {
 	help := fmt.Sprintf(`cr: Cryptic Resolver version %v in Go
 
 usage:
-    cr -v                     => print version
-    cr -h                     => print this help
-    cr -u (xx.com//repo.git)  => update default sheet or add sheet from a git repo
-    cr emacs                  => Edit macros: a feature-rich editor`, CRYPTIC_VERSION)
+    cr -v                   => print version
+    cr -h                   => print this help
+		cr -l									  => List local dictionaries
+    cr -u                   => Update all dictionaries
+		cr -a xx.com//repo.git  => Add a new dictionary
+		cr -d cryptic_xx        => Delete a dictionary
+    cr emacs                => Edit macros: a feature-rich editor`, CRYPTIC_VERSION)
 
 	fmt.Println(help)
 }
@@ -466,6 +470,18 @@ func print_version() {
 	help := fmt.Sprintf(`cr: Cryptic Resolver version %v in Go`, CRYPTIC_VERSION)
 
 	fmt.Println(help)
+}
+
+func list_directories() {
+	dir, _ := os.Open(CRYPTIC_RESOLVER_HOME)
+	files, _ := dir.Readdir(0)
+
+	for i, value := range files {
+		index := bold(blue(strconv.FormatInt(int64(i+1), 10)))
+		str := fmt.Sprintf("%s. %s\n", index, bold(green(value.Name())))
+		fmt.Printf(str)
+	}
+
 }
 
 func main() {
@@ -483,10 +499,12 @@ func main() {
 	case "":
 		help()
 		add_default_dicts_if_none_exists()
-	case "-h":
-		help()
 	case "-v":
 		print_version()
+	case "-h":
+		help()
+	case "-l":
+		list_directories()
 	case "-u":
 		update_dicts()
 	case "-a":
