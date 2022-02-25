@@ -6,6 +6,11 @@
 
 </div>
 
+
+## NOTE
+
+I'm no longer maintaining this go version cr, you can fork it if you like.
+
 This command line tool `cr` is used to **record and explain cryptic commands, acronyms and so forth** in daily life.
 The effort is to study etymology and know of naming conventions.
 
